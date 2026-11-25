@@ -1,0 +1,29 @@
+[project]
+name = "farmo"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Luis Bobadilla", email = "superluis5@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "duckdb>=2.0.1",
+    "httpx>=0.28.1",
+    "pandas>=3.1.1",
+    "rapidfuzz>=3.14.6",
+    "selectolax>=1.0.2",
+    "streamlit>=1.67.0",
+]
+
+[project.scripts]
+farmo = "farmo:main"
+
+[project.optional-dependencies]
+llm = [
+    "anthropic>=2.14.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14.0"]
+build-backend = "uv_build"
