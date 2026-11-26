@@ -89,7 +89,12 @@ class PoliteClient:
             raise Blocked(f"robots.txt disallows {url}")
 
         self._sleep()
-        r = self._client.get(url, headers=headers)
+        try:
+            r = self._client.get(url, headers=headers)
+        except httpx.TransportError as e:  # dropped connection etc.: one polite retry
+            log.warning("transport error on %s (%s); retrying once in 5s", url, e)
+            time.sleep(5)
+            r = self._client.get(url, headers=headers)
         self.stats["network"] += 1
         if r.is_redirect:
             loc = r.headers.get("location", "")

@@ -13,7 +13,7 @@ def fold(text: str | None) -> str:
     """Lowercase + strip accents: 'LOSARTÁN Potásico' -> 'losartan potasico'."""
     import unicodedata
 
-    if not text:
+    if not isinstance(text, str) or not text:  # None / NaN from pandas
         return ""
     nfkd = unicodedata.normalize("NFKD", text)
     return "".join(c for c in nfkd if not unicodedata.combining(c)).lower()
