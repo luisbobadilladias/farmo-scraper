@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Remedio Justo · Comparador de precios</title>
+<meta name="description" content="Compará el precio real de tus medicamentos en farmacias de Paraguay, por pastilla.">
+<style>
+:root {
+  --bg: #f6f7f5; --surface: #ffffff; --surface-2: #f0f2ee; --text: #1b1f1c; --muted: #5d665f;
+  --line: #e2e6e0; --accent: #13795b; --accent-soft: #e3f3ec; --brand: #2f5fb3; --brand-soft: #e6eefb;
+  --warn: #9a5b00; --warn-soft: #fdf1dc; --bad: #a33a2b; --bar: #cfe6db;
+  --c-farmacenter: #c2410c; --c-catedral: #1d4ed8; --c-farmaoliva: #047857;
+  --radius: 14px; --shadow: 0 1px 2px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111412; --surface: #1a1e1b; --surface-2: #222723; --text: #e9ece9; --muted: #9aa39c;
+    --line: #2d332e; --accent: #4cc398; --accent-soft: #173327; --brand: #7aa5f0; --brand-soft: #1a2640;
+    --warn: #f0b45a; --warn-soft: #33270f; --bad: #f08a7a; --bar: #24463a;
+    --c-farmacenter: #fb923c; --c-catedral: #93b4ff; --c-farmaoliva: #5fd3a5; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111412; --surface: #1a1e1b; --surface-2: #222723; --text: #e9ece9; --muted: #9aa39c;
+  --line: #2d332e; --accent: #4cc398; --accent-soft: #173327; --brand: #7aa5f0; --brand-soft: #1a2640;
+  --warn: #f0b45a; --warn-soft: #33270f; --bad: #f08a7a; --bar: #24463a;
+  --c-farmacenter: #fb923c; --c-catedral: #93b4ff; --c-farmaoliva: #5fd3a5; --shadow: none;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+a { color: inherit; }
+.wrap { max-width: 920px; margin: 0 auto; padding: 0 16px; }
+header.top { padding: 28px 0 8px; }
+.logo { display: flex; align-items: center; gap: 8px; font-weight: 700; letter-spacing: -.01em; color: var(--accent); }
+.logo svg { width: 26px; height: 26px; }
+h1 { font-size: clamp(1.6rem, 4.5vw, 2.3rem); line-height: 1.15; margin: 14px 0 6px; letter-spacing: -.02em; }
+.lead { color: var(--muted); margin: 0 0 18px; max-width: 60ch; }
+.search { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 10px 0 8px; }
+.controls { padding-bottom: 4px; }
+.search-box { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1.5px solid var(--line);
+  border-radius: 999px; padding: 4px 6px 4px 16px; box-shadow: var(--shadow); }
+.search-box:focus-within { border-color: var(--accent); }
+.search-box svg { width: 20px; height: 20px; flex: none; color: var(--muted); }
+.search-box input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text);
+  font-size: 1.05rem; padding: 10px 0; }
+.search-box button { border: 0; background: transparent; color: var(--muted); font-size: 1.3rem; width: 40px; height: 40px;
+  border-radius: 50%; cursor: pointer; }
+.search-box button:hover { background: var(--surface-2); }
+.chips { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 2px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: 999px;
+  padding: 7px 13px; font-size: .9rem; cursor: pointer; white-space: nowrap; }
+.chip:hover, .chip[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.filters { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: .9rem; color: var(--muted); padding: 6px 0 2px; }
+.filters label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: transparent; color: var(--muted); padding: 6px 12px; font-size: .85rem; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+:root[data-theme="dark"] .seg button[aria-pressed="true"] { color: #08140f; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .seg button[aria-pressed="true"] { color: #08140f; } }
+main { padding: 8px 0 40px; }
+.status { color: var(--muted); font-size: .92rem; margin: 10px 2px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
+  margin: 14px 0 18px; overflow: hidden; }
+.card-h { padding: 16px 18px 6px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; align-items: baseline; }
+.card-h h2 { font-size: 1.25rem; margin: 0; letter-spacing: -.01em; }
+.card-h h2 small { font-weight: 500; color: var(--muted); font-size: .95rem; }
+.meta { color: var(--muted); font-size: .88rem; }
+.best { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; padding: 10px 18px 4px; }
+.best-box { border-radius: 12px; padding: 12px 14px; }
+.best-box.gen { background: var(--accent-soft); }
+.best-box.brand { background: var(--brand-soft); }
+.best-box .k { font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.best-box.gen .k { color: var(--accent); } .best-box.brand .k { color: var(--brand); }
+.best-box .v { font-size: 1.35rem; font-weight: 700; margin: 2px 0; font-variant-numeric: tabular-nums; }
+.best-box .v small { font-size: .85rem; font-weight: 500; color: var(--muted); }
+.best-box .d { font-size: .86rem; color: var(--muted); overflow-wrap: anywhere; }
+.save { margin: 8px 18px 2px; font-size: .92rem; }
+.save strong { color: var(--accent); }
+ol.offers { list-style: none; margin: 8px 0 0; padding: 0; }
+.offer { display: grid; grid-template-columns: 1fr auto; gap: 4px 14px; padding: 12px 18px; border-top: 1px solid var(--line); }
+.offer.match .name::after { content: "tu búsqueda"; margin-left: 8px; font-size: .7rem; font-weight: 600; color: var(--warn);
+  background: var(--warn-soft); border-radius: 999px; padding: 1px 7px; vertical-align: middle; }
+.note { margin: 6px 18px 0; font-size: .88rem; color: var(--muted); }
+.offer.hl-gen { box-shadow: inset 4px 0 0 var(--accent); }
+.offer.hl-brand { box-shadow: inset 4px 0 0 var(--brand); }
+.offer .name { font-weight: 600; overflow-wrap: anywhere; }
+.offer .sub { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 4px; font-size: .82rem; color: var(--muted); }
+.pill { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 2px 8px; font-size: .78rem; font-weight: 600;
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--text); }
+.pill .dot { width: 8px; height: 8px; border-radius: 50%; }
+.tag-gen { color: var(--accent); background: var(--accent-soft); border-color: transparent; }
+.tag-brand { color: var(--brand); background: var(--brand-soft); border-color: transparent; }
+.tag-out { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
+.price { text-align: right; font-variant-numeric: tabular-nums; }
+.price .unit { font-size: 1.1rem; font-weight: 700; white-space: nowrap; }
+.price .unit small { font-weight: 500; color: var(--muted); font-size: .78rem; }
+.price .box { font-size: .85rem; color: var(--muted); white-space: nowrap; }
+.price del { color: var(--muted); font-size: .78rem; margin-right: 4px; }
+.bar { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--bar); border-radius: 3px; }
+.offer.hl-gen .bar i { background: var(--accent); } .offer.hl-brand .bar i { background: var(--brand); }
+.offer .go { font-size: .82rem; font-weight: 600; color: var(--accent); text-decoration: none; white-space: nowrap; }
+.offer .go:hover { text-decoration: underline; }
+.equiv { font-size: .78rem; color: var(--muted); }
+.more { display: block; width: 100%; border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--accent);
+  font-weight: 600; padding: 12px; cursor: pointer; font-size: .92rem; }
+.more:hover { background: var(--surface-2); }
+.nounit { padding: 10px 18px 14px; border-top: 1px dashed var(--line); font-size: .85rem; color: var(--muted); }
+.nounit summary { cursor: pointer; }
+.empty { text-align: center; padding: 40px 10px; color: var(--muted); }
+.empty h2 { color: var(--text); font-size: 1.2rem; }
+.howto { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 18px 0; }
+.howto div { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; font-size: .92rem; }
+.howto b { display: block; margin-bottom: 4px; }
+footer { border-top: 1px solid var(--line); padding: 20px 0 36px; color: var(--muted); font-size: .85rem; }
+footer p { margin: 6px 0; max-width: 75ch; }
+.theme { float: right; border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 999px;
+  padding: 4px 10px; cursor: pointer; font-size: .8rem; }
+@media (max-width: 560px) {
+  .offer { grid-template-columns: 1fr; }
+  .price { text-align: left; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <button class="theme" id="theme" type="button" aria-label="Cambiar tema">◐ tema</button>
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <rect x="2.5" y="8" width="19" height="8" rx="4" transform="rotate(-35 12 12)"/><path d="M9.2 7.9l5.6 8.2"/>
+      </svg>
+      Remedio Justo
+    </div>
+    <h1>¿Cuánto cuesta tu remedio en cada farmacia?</h1>
+    <p class="lead">Buscá un medicamento y compará el precio <b>por pastilla</b> entre farmacias de Paraguay, incluyendo genéricos y marcas con el mismo principio activo y dosis.</p>
+  </header>
+
+  <div class="search" role="search">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" list="sugg" autocomplete="off" placeholder="Ej: losartán 50, ibuprofeno 400, Convertal…" aria-label="Buscar medicamento">
+      <datalist id="sugg"></datalist>
+      <button id="clear" type="button" aria-label="Borrar búsqueda" hidden>×</button>
+    </div>
+  </div>
+  <div class="controls">
+    <div class="chips" id="chips" aria-label="Búsquedas frecuentes"></div>
+    <div class="filters" id="filters" hidden>
+      <span class="seg" role="group" aria-label="Tipo">
+        <button type="button" data-kind="all" aria-pressed="true">Todos</button>
+        <button type="button" data-kind="gen" aria-pressed="false">Genéricos</button>
+        <button type="button" data-kind="brand" aria-pressed="false">Marcas</button>
+      </span>
+      <label><input type="checkbox" id="instock"> Solo con stock</label>
+      <span id="chainFilters"></span>
+    </div>
+  </div>
+
+  <main id="results" aria-live="polite"></main>
+
+  <footer>
+    <p id="fresh"></p>
+    <p id="coverage"></p>
+    <p>Los precios son los publicados en la web de cada farmacia ese día y pueden cambiar o variar en el local. Agrupamos productos con el mismo principio activo, dosis y forma; revisá siempre el envase. <b>Antes de cambiar de marca, consultá a tu médico o farmacéutico.</b> El precio máximo oficial se puede consultar en el sistema PrecioJusto de Sedeco.</p>
+    <p>Prueba de concepto · no afiliado a ninguna farmacia.</p>
+  </footer>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+
+// ---------- helpers ----------
+const $ = (s) => document.querySelector(s);
+function h(tag, attrs, ...kids) {           // tiny DOM builder: all text goes through textContent
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k === "style") el.setAttribute("style", v);
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat()) {
+    if (kid == null || kid === false) continue;
+    el.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+  }
+  return el;
+}
+const fold = (s) => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const nf = new Intl.NumberFormat("es-PY", { maximumFractionDigits: 0 });
+const pyg = (v) => v == null ? "—" : "₲ " + nf.format(Math.round(v));
+const qty = (v) => Number.isInteger(v) ? String(v) : String(+v.toFixed(1));
+const CHAIN_LABEL = DATA.chains;
+const STRENGTH_UNITS = new Set(["mg", "mcg", "ug", "g", "ui", "ml", "%"]);
+
+function unitWord(g, o, n = 1) {
+  if (o.qu === "ml") return "ml";
+  if (o.qu === "dosis") return n === 1 ? "dosis" : "dosis";
+  return n === 1 ? g.f[0] : g.f[1];
+}
+
+// ---------- search index ----------
+for (const g of DATA.groups) {
+  const words = [...g.ing, ...g.aliases, ...g.o.map((o) => o.b || ""), ...g.o.map((o) => o.n), g.f[0], g.f[1]];
+  g._hay = fold(words.join(" "));
+  g._ingHay = fold([...g.ing, ...g.aliases].join(" "));
+  g._title = g.ing.join(" + ") + (g.st ? " " + g.st : "");
+  g._chains = new Set(g.o.map((o) => o.c));
+}
+
+function parseQuery(q) {
+  const f = fold(q).replace(/(\d),(\d)/g, "$1.$2");
+  const m = f.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|ug|g|ui|ml|%)?/);
+  const tokens = f.replace(/(\d+(?:\.\d+)?)\s*(mg|mcg|ug|ui|ml|%)?/g, " ").split(/[^a-z0-9]+/)
+    .filter((t) => t.length >= 2 && !STRENGTH_UNITS.has(t));
+  return { tokens, num: m ? parseFloat(m[1]) : null, unit: m && m[2] ? m[2].replace("ug", "mcg") : null };
+}
+
+function search(q) {
+  const { tokens, num, unit } = parseQuery(q);
+  if (!tokens.length) return [];
+  const hits = [];
+  for (const g of DATA.groups) {
+    const hayWords = g._hay.split(/[^a-z0-9]+/);
+    const ok = tokens.every((t) => hayWords.some((w) => w.startsWith(t)) || (t.length >= 4 && g._hay.includes(t)));
+    if (!ok) continue;
+    if (num != null && g.sv !== num) continue;
+    if (unit && g.su && !g.su.startsWith(unit)) continue;
+    let score = g.o.length + 8 * g._chains.size;
+    if (g.bq) score += 100;
+    if (g.ing.length === 1) score += 30;
+    if (tokens.every((t) => g._ingHay.split(/[^a-z0-9]+/).some((w) => w.startsWith(t)))) score += 60;
+    hits.push([score, g]);
+  }
+  return hits.sort((a, b) => b[0] - a[0]).map((x) => x[1]);
+}
+
+// ---------- state ----------
+const state = { q: "", kind: "all", instock: false, chains: new Set(Object.keys(CHAIN_LABEL)), open: new Set() };
+
+function filteredOffers(g) {
+  return g.o.filter((o) =>
+    state.chains.has(o.c) &&
+    (!state.instock || o.s !== false) &&
+    (state.kind === "all" || (state.kind === "gen" ? o.g : !o.g)));
+}
+
+// ---------- rendering ----------
+function chainPill(c) {
+  return h("span", { class: "pill" }, h("span", { class: "dot", style: `background:var(--c-${c})` }), CHAIN_LABEL[c] || c);
+}
+
+function renderGroup(g) {
+  const offers = filteredOffers(g);
+  if (!offers.length) return null;
+  const priced = offers.filter((o) => o.u != null).sort((a, b) => a.u - b.u || a.p - b.p);
+  const unpriced = offers.filter((o) => o.u == null).sort((a, b) => a.p - b.p);
+  const gen = priced.find((o) => o.g), brand = priced.find((o) => !o.g);
+  const maxU = priced.length ? priced[priced.length - 1].u : 0;
+  // typical pack for "equivalent price" (most common pack size in group)
+  const packs = {};
+  priced.forEach((o) => { if (o.q) packs[o.q] = (packs[o.q] || 0) + 1; });
+  const refPack = +Object.entries(packs).sort((a, b) => b[1] - a[1] || b[0] - a[0])[0]?.[0] || null;
+  const chainsHere = new Set(offers.map((o) => o.c));
+  // brand search: which offers did the user actually name?
+  const { tokens } = parseQuery(state.q);
+  const ingWords = g._ingHay.split(/[^a-z0-9]+/);
+  const brandTokens = tokens.filter((t) => !ingWords.some((w) => w.startsWith(t)));
+  const isMatch = (o) => brandTokens.length > 0 && brandTokens.every((t) => fold(o.n).split(/[^a-z0-9]+/).some((w) => w.startsWith(t)));
+  const named = priced.filter(isMatch);
+
+  const title = h("h2", {}, g.ing.join(" + "), g.st ? " " + g.st : "", " ",
+    h("small", {}, "· " + g.f[1] + (g.rel === "prolongada" ? " de liberación prolongada" : "")));
+  const head = h("div", { class: "card-h" }, title,
+    h("span", { class: "meta" }, `${offers.length} ${offers.length === 1 ? "opción" : "opciones"} en ${chainsHere.size} ${chainsHere.size === 1 ? "farmacia" : "farmacias"}`));
+
+  const bestBox = (o, kind) => o && h("div", { class: "best-box " + kind },
+    h("div", { class: "k" }, kind === "gen" ? "Genérico más barato" : "Marca más barata"),
+    h("div", { class: "v" }, pyg(o.u), h("small", {}, " / " + unitWord(g, o))),
+    h("div", { class: "d" }, `${kind === "brand" && o.b ? o.b + " · " : ""}${CHAIN_LABEL[o.c]} · ${pyg(o.p)} x ${qty(o.q)} ${unitWord(g, o, o.q)}`));
+  const best = (gen || brand) ? h("div", { class: "best" }, bestBox(gen, "gen"), bestBox(brand, "brand")) : null;
+
+  let save = null;
+  if (priced.length >= 2 && priced[0].u < maxU) {
+    const pct = Math.round(100 * (1 - priced[0].u / maxU));
+    const ex = refPack ? ` (${pyg((maxU - priced[0].u) * refPack)} en ${qty(refPack)} ${unitWord(g, priced[0], refPack)})` : "";
+    save = h("p", { class: "save" }, "Eligiendo la opción más barata ahorrás hasta ", h("strong", {}, pct + "%"),
+      " frente a la más cara" + ex + ".");
+  }
+
+  let note = null;
+  if (named.length) {
+    const cheapest = priced[0];
+    note = h("p", { class: "note" }, `${named[0].b || named[0].n} contiene ${g.ing.join(" + ").toLowerCase()} ${g.st || ""}. `,
+      cheapest && !isMatch(cheapest) && cheapest.u < named[0].u
+        ? `La opción equivalente más barata cuesta ${Math.round(100 * (1 - cheapest.u / named[0].u))}% menos por unidad que ${named[0].b || "la que buscaste"} más barata.`
+        : "Es de las opciones más baratas para este principio activo y dosis.");
+  }
+  const isOpen = state.open.has(g.id);
+  const SHOW = 5;
+  const list = h("ol", { class: "offers" });
+  priced.forEach((o, i) => {
+    if (!isOpen && i >= SHOW && !isMatch(o)) return;
+    const cls = "offer" + (o === gen ? " hl-gen" : o === brand ? " hl-brand" : "") + (isMatch(o) ? " match" : "");
+    const tags = [
+      chainPill(o.c),
+      o.g ? h("span", { class: "pill tag-gen" }, "Genérico") : h("span", { class: "pill tag-brand" }, o.b || "Marca"),
+      o.lab ? h("span", {}, o.lab) : null,
+      o.s === false ? h("span", { class: "pill tag-out" }, "sin stock online") : null,
+    ];
+    list.append(h("li", { class: cls },
+      h("div", {},
+        h("div", { class: "name" }, o.n),
+        h("div", { class: "sub" }, tags)),
+      h("div", { class: "price" },
+        h("div", { class: "unit" }, pyg(o.u), h("small", {}, " / " + unitWord(g, o))),
+        h("div", { class: "box" }, o.lp ? h("del", {}, pyg(o.lp)) : null, `${pyg(o.p)} x ${qty(o.q)}`),
+        refPack && o.q !== refPack ? h("div", { class: "equiv" }, `≈ ${pyg(o.u * refPack)} por ${qty(refPack)}`) : null,
+        h("a", { class: "go", href: o.url, target: "_blank", rel: "noopener noreferrer nofollow" }, "Ver en " + CHAIN_LABEL[o.c] + " ↗")),
+      h("div", { class: "bar", "aria-hidden": "true" }, h("i", { style: `width:${Math.max(4, 100 * o.u / maxU).toFixed(1)}%` }))));
+  });
+
+  const more = priced.length > SHOW ? h("button", {
+    class: "more", type: "button",
+    onclick: () => { isOpen ? state.open.delete(g.id) : state.open.add(g.id); render(); },
+  }, isOpen ? "Mostrar menos" : `Ver las ${priced.length} opciones`) : null;
+
+  const nounit = unpriced.length ? h("details", { class: "nounit" },
+    h("summary", {}, `${unpriced.length} ${unpriced.length === 1 ? "producto" : "productos"} sin precio por unidad (no pudimos leer cuántas unidades trae)`),
+    h("ul", {}, unpriced.map((o) => h("li", {}, `${o.n} · ${CHAIN_LABEL[o.c]} · ${pyg(o.p)} `,
+      h("a", { href: o.url, target: "_blank", rel: "noopener noreferrer nofollow" }, "ver ↗"))))) : null;
+
+  return h("article", { class: "card" }, head, note, best, save, list, more, nounit);
+}
+
+function renderEmpty(msg) {
+  const box = h("div", { class: "empty" }, h("h2", {}, msg.title), h("p", {}, msg.body));
+  if (msg.howto) {
+    box.append(h("div", { class: "howto" },
+      h("div", {}, h("b", {}, "1 · Buscá"), "Por principio activo (losartán) o por marca (Convertal). Sumá la dosis para afinar: \"losartán 50\"."),
+      h("div", {}, h("b", {}, "2 · Compará por pastilla"), "Las cajas traen distinta cantidad; el precio por unidad es lo que de verdad se compara."),
+      h("div", {}, h("b", {}, "3 · Elegí"), "Verde: genérico más barato. Azul: marca más barata. Consultá a tu farmacéutico antes de cambiar.")));
+  }
+  return box;
+}
+
+function render() {
+  const out = $("#results");
+  out.replaceChildren();
+  $("#clear").hidden = !state.q;
+  document.querySelectorAll("#chips .chip").forEach((c) => c.setAttribute("aria-pressed", String(fold(c.dataset.q) === fold(state.q))));
+  if (!state.q.trim()) {
+    $("#filters").hidden = true;
+    out.append(renderEmpty({ title: "Empezá buscando tu medicamento", body: "O tocá uno de los más buscados arriba.", howto: true }));
+    return;
+  }
+  $("#filters").hidden = false;
+  const groups = search(state.q);
+  const cards = groups.slice(0, 15).map(renderGroup).filter(Boolean);
+  if (!cards.length) {
+    const { num } = parseQuery(state.q);
+    out.append(renderEmpty({
+      title: "No encontramos resultados",
+      body: num != null && search(state.q.replace(/\d+(?:[.,]\d+)?\s*(mg|mcg|ui|ml|g|%)?/i, "")).length
+        ? "Hay resultados con otra dosis: probá sin el número."
+        : "Revisá la ortografía, probá con el principio activo, o quitá filtros.",
+    }));
+    return;
+  }
+  out.append(h("p", { class: "status" }, groups.length > 15
+    ? `Mostrando 15 de ${groups.length} presentaciones. Sumá la dosis para afinar (ej. "${state.q} 50").`
+    : `${groups.length} ${groups.length === 1 ? "presentación encontrada" : "presentaciones encontradas"}, ordenadas por relevancia. Dentro de cada una, de más barata a más cara por unidad.`));
+  out.append(...cards);
+}
+
+// ---------- wiring ----------
+function setQuery(q, push = true) {
+  state.q = q; state.open.clear();
+  $("#q").value = q;
+  if (push) history.replaceState(null, "", q ? "#q=" + encodeURIComponent(q) : location.pathname);
+  render();
+}
+
+let t;
+$("#q").addEventListener("input", (e) => { clearTimeout(t); t = setTimeout(() => setQuery(e.target.value), 150); });
+$("#clear").addEventListener("click", () => { setQuery(""); $("#q").focus(); });
+$("#instock").addEventListener("change", (e) => { state.instock = e.target.checked; render(); });
+document.querySelectorAll(".seg button").forEach((b) => b.addEventListener("click", () => {
+  state.kind = b.dataset.kind;
+  document.querySelectorAll(".seg button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  render();
+}));
+for (const [c, label] of Object.entries(CHAIN_LABEL)) {
+  const cb = h("input", { type: "checkbox", checked: true, onchange: (e) => {
+    e.target.checked ? state.chains.add(c) : state.chains.delete(c); render();
+  } });
+  $("#chainFilters").append(h("label", {}, cb, h("span", { class: "dot", style: `display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c-${c})` }), label), " ");
+}
+for (const q of DATA.popular) {
+  $("#chips").append(h("button", { class: "chip", type: "button", "data-q": q, onclick: () => setQuery(q) }, q));
+}
+// autocomplete: presentations + brand names
+const sugg = new Set();
+DATA.groups.filter((g) => g.ing.length <= 2).forEach((g) => sugg.add(g._title));
+DATA.groups.forEach((g) => g.o.forEach((o) => { if (o.b && o.b.length > 3) sugg.add(o.b[0] + o.b.slice(1).toLowerCase()); }));
+[...sugg].sort().slice(0, 800).forEach((s) => $("#sugg").append(h("option", { value: s })));
+
+const total = DATA.groups.reduce((n, g) => n + g.o.length, 0);
+const d = new Date(DATA.date + "T12:00:00");
+$("#fresh").textContent = `Precios relevados el ${d.toLocaleDateString("es-PY", { day: "numeric", month: "long", year: "numeric" })} · ${nf.format(total)} productos en ${nf.format(DATA.groups.length)} presentaciones.`;
+$("#coverage").textContent = `Farmacias incluidas: ${Object.values(CHAIN_LABEL).join(", ")}. No incluidas: ${DATA.blocked.map((b) => b.label + " (" + b.why + ")").join(", ")}.`;
+
+// theme toggle (remembered per browser; storage may be unavailable)
+const root = document.documentElement;
+try { const saved = localStorage.getItem("theme"); if (saved) root.dataset.theme = saved; } catch (_) {}
+$("#theme").addEventListener("click", () => {
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+  try { localStorage.setItem("theme", root.dataset.theme); } catch (_) {}
+});
+
+const initial = decodeURIComponent((location.hash.match(/q=([^&]*)/) || [])[1] || "");
+setQuery(initial, false);
+</script>
+</body>
+</html>

@@ -10,6 +10,7 @@ def main() -> None:
     s.add_argument("--chain", action="append", help="chain(s); default: all")
     n = sub.add_parser("normalize", help="parse names + build equivalence groups")
     n.add_argument("--llm", action="store_true", help="send unparsed names to Claude (optional extra)")
+    sub.add_parser("export", help="write the public static site to site/index.html")
     sub.add_parser("report", help="print coverage / match / spread stats used for FINDINGS.md")
     ap.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args()
@@ -24,6 +25,9 @@ def main() -> None:
     elif args.cmd == "normalize":
         from .normalize import run
         run(["--llm"] if args.llm else [])
+    elif args.cmd == "export":
+        from .export import run
+        run()
     elif args.cmd == "report":
         from .report import run
         run()
